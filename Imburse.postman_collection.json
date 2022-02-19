@@ -1,0 +1,330 @@
+{
+	"info": {
+		"_postman_id": "dc9d4a53-3d5b-4161-b8ba-fcec293fe21e",
+		"name": "Imburse",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth Token",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var CryptoJS = require(\"crypto-js\");",
+							"",
+							"var publicKey = pm.environment.get(\"publicKey\");",
+							"var privateKey = CryptoJS.enc.Base64.parse(pm.environment.get(\"privateKey\"));",
+							"",
+							"var timestamp = (new Date).getTime() / 1000;",
+							"",
+							"var nonce = timestamp;",
+							"    ",
+							"var body = request.data;",
+							"",
+							"if (body.length > 0){",
+							"    var utf8Body = CryptoJS.enc.Utf8.parse(body);",
+							"    var hashedBody = CryptoJS.SHA256(utf8Body);",
+							"    var bodySignature = CryptoJS.enc.Base64.stringify(hashedBody);",
+							"}",
+							"else {",
+							"    var bodySignature = \"\";",
+							"}",
+							"",
+							"var unsignedSignature = publicKey + \":\" + nonce + \":\" + timestamp + \":\" + bodySignature;",
+							"",
+							"var utf8Signature = CryptoJS.enc.Utf8.parse(unsignedSignature);",
+							"var hashedSignature = CryptoJS.HmacSHA256(utf8Signature, privateKey);",
+							"var signedSignature = CryptoJS.enc.Base64.stringify(hashedSignature);",
+							"",
+							"var hmac = publicKey + \":\" + nonce + \":\" + timestamp + \":\" + signedSignature;",
+							"",
+							"pm.variables.set(\"token\", hmac);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseJson = pm.response.json();",
+							"console.log (responseJson.accessToken);",
+							"pm.environment.set(\"Authtoken\", responseJson.accessToken);",
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "hmac {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{basePath}}/v1/identity/hmac",
+					"host": [
+						"{{basePath}}"
+					],
+					"path": [
+						"v1",
+						"identity",
+						"hmac"
+					],
+					"query": [
+						{
+							"key": "Authorization",
+							"value": "hmac {{token}}",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "OrderCreation_Negative flow",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var CryptoJS = require(\"crypto-js\");",
+							"",
+							"var publicKey = pm.environment.get(\"publicKey\");",
+							"var privateKey = CryptoJS.enc.Base64.parse(pm.environment.get(\"privateKey\"));",
+							"",
+							"var timestamp = (new Date).getTime() / 1000;",
+							"",
+							"var nonce = timestamp;",
+							"    ",
+							"var body = request.data;",
+							"",
+							"if (body.length > 0){",
+							"    var utf8Body = CryptoJS.enc.Utf8.parse(body);",
+							"    var hashedBody = CryptoJS.SHA256(utf8Body);",
+							"    var bodySignature = CryptoJS.enc.Base64.stringify(hashedBody);",
+							"}",
+							"else {",
+							"    var bodySignature = \"\";",
+							"}",
+							"",
+							"var unsignedSignature = publicKey + \":\" + nonce + \":\" + timestamp + \":\" + bodySignature;",
+							"",
+							"var utf8Signature = CryptoJS.enc.Utf8.parse(unsignedSignature);",
+							"var hashedSignature = CryptoJS.HmacSHA256(utf8Signature, privateKey);",
+							"var signedSignature = CryptoJS.enc.Base64.stringify(hashedSignature);",
+							"",
+							"var hmac = publicKey + \":\" + nonce + \":\" + timestamp + \":\" + signedSignature;",
+							"",
+							"pm.variables.set(\"token\", hmac);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-account-id",
+						"value": "782f1b71-7ca4-4465-917f-68d58ffbec8b",
+						"type": "text"
+					},
+					{
+						"key": "x-tenant-id",
+						"value": "6423ae63-59b6-4986-a949-c910ac622471",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "bearer {{Authtoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderRef\": \"\",\n    \"instructions\": [\n        {\n            \"instructionRef\": \"{{$timestamp}}.{{$randomFirstName}}_{{$randomInt}}\",\n            \"customerRef\": \"{{$timestamp}}.{{$randomFirstName}}_{{$randomInt}}\",\n            \"direction\": \"DEBIT\",\n            \"amount\": \"6.99\",\n            \"currency\": \"EUR\",\n            \"country\": \"IE\",\n            \"settledByDate\": \"2022-12-31\",\n            \"schemeId\": \"654EB81FF7F07F7CF5A1EE3FF6972E90\",\n            \"metadata\": {\n                \"key1\": \"xyz\",\n                \"key2\": \"rtyu\",\n                \"key3\": \"ghwww\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"key1\": \"abc\",\n        \"key2\": \"test\",\n        \"key3\": \"testa\"\n    },\n    \"customerDefaults\": {\n        \"customerRef1\": {\n            \"schemeId\": \"654EB81FF7F07F7CF5A1EE3FF6972E90\",\n            \"metadata\": {\n                \"key1\": \"testa\"\n            }\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{basePath}}/v1/order-management",
+					"host": [
+						"{{basePath}}"
+					],
+					"path": [
+						"v1",
+						"order-management"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "OrderCreation_Positive flow",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var CryptoJS = require(\"crypto-js\");",
+							"",
+							"var publicKey = pm.environment.get(\"publicKey\");",
+							"var privateKey = CryptoJS.enc.Base64.parse(pm.environment.get(\"privateKey\"));",
+							"",
+							"var timestamp = (new Date).getTime() / 1000;",
+							"",
+							"var nonce = timestamp;",
+							"    ",
+							"var body = request.data;",
+							"",
+							"if (body.length > 0){",
+							"    var utf8Body = CryptoJS.enc.Utf8.parse(body);",
+							"    var hashedBody = CryptoJS.SHA256(utf8Body);",
+							"    var bodySignature = CryptoJS.enc.Base64.stringify(hashedBody);",
+							"}",
+							"else {",
+							"    var bodySignature = \"\";",
+							"}",
+							"",
+							"var unsignedSignature = publicKey + \":\" + nonce + \":\" + timestamp + \":\" + bodySignature;",
+							"",
+							"var utf8Signature = CryptoJS.enc.Utf8.parse(unsignedSignature);",
+							"var hashedSignature = CryptoJS.HmacSHA256(utf8Signature, privateKey);",
+							"var signedSignature = CryptoJS.enc.Base64.stringify(hashedSignature);",
+							"",
+							"var hmac = publicKey + \":\" + nonce + \":\" + timestamp + \":\" + signedSignature;",
+							"",
+							"pm.variables.set(\"token\", hmac);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 202\", function () {",
+							"    pm.response.to.have.status(202);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "x-account-id",
+						"value": "782f1b71-7ca4-4465-917f-68d58ffbec8b",
+						"type": "text"
+					},
+					{
+						"key": "x-tenant-id",
+						"value": "6423ae63-59b6-4986-a949-c910ac622471",
+						"type": "text"
+					},
+					{
+						"key": "Authorization",
+						"value": "bearer {{Authtoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderRef\": \"{{$timestamp}}.{{$randomFirstName}}_{{$randomInt}}\",\n    \"instructions\": [\n        {\n            \"instructionRef\": \"{{$timestamp}}.{{$randomFirstName}}_{{$randomInt}}\",\n            \"customerRef\": \"{{$timestamp}}.{{$randomFirstName}}_{{$randomInt}}\",\n            \"direction\": \"DEBIT\",\n            \"amount\": \"6.99\",\n            \"currency\": \"EUR\",\n            \"country\": \"IE\",\n            \"settledByDate\": \"2022-12-31\",\n            \"schemeId\": \"654EB81FF7F07F7CF5A1EE3FF6972E90\",\n            \"metadata\": {\n                \"key1\": \"xyz\",\n                \"key2\": \"rtyu\",\n                \"key3\": \"ghwww\"\n            }\n        }\n    ],\n    \"metadata\": {\n        \"key1\": \"abc\",\n        \"key2\": \"test\",\n        \"key3\": \"testa\"\n    },\n    \"customerDefaults\": {\n        \"customerRef1\": {\n            \"schemeId\": \"654EB81FF7F07F7CF5A1EE3FF6972E90\",\n            \"metadata\": {\n                \"key1\": \"testa\"\n            }\n        }\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{basePath}}/v1/order-management",
+					"host": [
+						"{{basePath}}"
+					],
+					"path": [
+						"v1",
+						"order-management"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "token",
+			"value": "Generated on pre-request",
+			"disabled": true
+		}
+	]
+}
